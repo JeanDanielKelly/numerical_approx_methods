@@ -3,150 +3,163 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class taylorSeries(object):
-    def __init__(self, is_diff, step_type):
+    def __init__(self):
 
-        self.is_diff = is_diff # Input: True if differential eq - False if not
-        self.step_type = step_type # Single if Single step - Multiple if Multiple steps
-
-        self.exact = {
-            "function_string": None
+        self.exact_solution = {
+            "solution_string": None,
+            "function": None,
+            "y_range": np.array([])
         }
 
-        self.solution = {
+        self.numerical_approximation = {
+            "x0": None, # boundary condition
+            "x_range":np.array([]),
+            "y0": None, # boundary condition
+            "y_range": np.array([]),
             "min_range": None,
             "max_range": None,
             "increment": None,
-            "numerical_x_values": None,
-            "numerical_approx_function": None,
+            "test_function_string":None,
+            "test_function": None,
+            "is_diff": None, # True if differential equation dy/dx = f(x,y) | False if equation y(x) = ax + b
+            "step_type": None, # "multiple" if multiple steps | "single" if evaluated in 1 point
+            "approx_function": None,
             "numerical_error": None
         }
 
-    def exact_solution(self,function_string):
-        self.exact["function_string"] = function_string
-        
-    def eval_exact_x(self, x_val):
-        x = sp.Symbol('x')
-        f_eval = eval(self.exact["function_string"])
-        self.solution["exact_function"] = sp.lambdify(x, f_eval)
-        return self.solution["exact_function"](x_val)
 
-    def eval_taylor_x(self, x_val):
-        return self.solution["numerical_approx_function"](x_val)
+    def load_function(self, test_function_string, exact_solution_string = None):
+        self.numerical_approximation["test_function_string"] = test_function_string
 
-    def plot_solution(self, min_range, max_range, increment):
-        # min_range is integer or float
-        # max_range is integer or float
-        # increment is integer
+        if exact_solution_string:
+            self.exact_solution["solution_string"] = exact_solution_string
+            x = sp.Symbol('x')
+            f_eval = eval(self.exact_solution["solution_string"])
+            self.exact_solution["function"] = sp.lambdify(x, f_eval) # TBD if exact function can be also f(x,y)
 
-        self.solution["numerical_x_values"] = np.linspace(min_range, max_range, num=increment)
-        x_eval = self.solution["numerical_x_values"]
-        # x_eval is numpy.array format
 
-        if type(x_eval) is np.ndarray:
-            taylor_eval_list = np.array([])
-            exact_solution_list = np.array([])
-            for i in x_eval:
-                taylor_eval_list = np.append(taylor_eval_list, self.eval_taylor_x(i))
-                if self.exact["function_string"] is not None:
-                    exact_solution_list = np.append(exact_solution_list, self.eval_exact_x(i))
-        else:
-            raise Exception("INVALID RANGE TYPE IN PLOT SOLUTION")
+    def set_parameters(self, x0, y0, step_type, is_diff):
+        self.numerical_approximation["is_diff"] = is_diff # Input: True if differential eq - False if not
+        self.numerical_approximation["step_type"] = step_type # "single" if Single step - "multiple" if Multiple steps
+        self.numerical_approximation["x0"] = x0
+        self.numerical_approximation["y0"] = y0
+        #self.numerical_approximation["x0"] = np.append(self.numerical_approximation["x0"], x0) # boundary condition (bc)
+        #self.numerical_approximation["y0"] = np.append(self.numerical_approximation["y0"], y0) # bc
 
-        plt.plot(x_eval, taylor_eval_list, color='orange', label='Taylor')
-        if self.exact["function_string"] is not None:
-            plt.plot(x_eval, exact_solution_list, color='blue', label='Exact')
-        plt.legend()
-        plt.title('Taylor approx vs exact solution')
-        plt.show()
 
-    def plot_error(self):
-        if type(self.solution["numerical_x_values"]) is np.ndarray:
-            self.solution["numerical_error"] = np.array([])
-            for i in self.solution["numerical_x_values"]:
-                self.solution["numerical_error"] = np.append(self.solution["numerical_error"], self.eval_exact_x(i) - self.eval_taylor_x(i))
-
-        plt.plot(self.solution["numerical_x_values"], self.solution["numerical_error"], color='red', label='error')
-        plt.legend()
-        plt.title('Numerical error of taylor approximation')
-        plt.show()
-
-    def series_approximation(self, test_function, x0, y0):
+    def series_approximation(self, test_function_string, x0, y0):
 
         # IMPORTANT - INPUT MAY BE DIFFERENTIAL EQUATION
-
+        # dy/dx = f(x,y)
         # y(x) = y(x0) + y'(x0)(x-x0) + y"(x0)/2! * (x-x0)**2 + ... + y'N(x0)/N! * (x-x0)**N
 
         # y'(x0) = f(x0,y0) *** IF INPUT IS DIFFERENTIAL EQUATION
         # y''(x0) = [df/dx + df/dy f(x,y)] | x=x0 & y=y(x0)
         # y'''(x0) = {d/dx [df/dx + df/dy f(x,y)]} | x=x0 & y=y0 + {f(x,y) d/dy[df/dx + df/dy y'(x)]} | x=x0 & y=y0
 
-        print('Approximation of dy/dx = ' + test_function)
-        print('y(0) = ' + str(y0))
         x = sp.Symbol('x')
         y = sp.Symbol('y')
 
-        if self.is_diff:
-            f_prime = eval(test_function)
+        if self.numerical_approximation["is_diff"]:
+            #print('Approximation of dy/dx = ' + test_function_string)
+            #print('BC x(0) = ' + str(x0))
+            #print('BC y(0) = ' + str(y0))
+
+            f_prime = eval(test_function_string)
             y_prime = sp.lambdify((x,y), f_prime)
-
-            print('f_prime expanded = ' + str(f_prime))
-            print('f_prime(0) = ' + str(y_prime(x0,y0)))
-
+            #print('f_prime expanded = ' + str(f_prime))
+            #print('f_prime(0) = ' + str(y_prime(x0,y0)))
             f_2prime = sp.diff(f_prime, x) + sp.diff(f_prime, y) * f_prime
             y_2prime = sp.lambdify((x,y), f_2prime)
-            print('f_2prime expanded = ' + str(f_2prime))
-            print('f_2prime(0) = ' + str(y_2prime(x0, y0)))
-
+            #print('f_2prime expanded = ' + str(f_2prime))
+            #print('f_2prime(0) = ' + str(y_2prime(x0, y0)))
             f_3inter = sp.diff(f_prime, x) + sp.diff(f_prime, y) * f_prime
             f_3prime = sp.diff(f_2prime, x) + f_prime * sp.diff(f_3inter, y)
             y_3prime = sp.lambdify((x,y), f_3prime)
-            print('f_3prime expanded = ' + str(f_3prime))
-            print('y_3prime(0) = ' + str(y_3prime(x0, y0)))
-
+            #print('f_3prime expanded = ' + str(f_3prime))
+            #print('y_3prime(0) = ' + str(y_3prime(x0, y0)))
             t_series = y0 + y_prime(x0, y0) * (x-x0) + (y_2prime(x0, y0) / sp.factorial(2)) * (x-x0)**2 + (y_3prime(x0, y0) / sp.factorial(3)) * (x-x0)**3
 
-        elif self.is_diff is False:
-            f_in = eval(test_function)
+        elif self.numerical_approximation["is_diff"] is False:
+            #print('Approximation of f(x) = ' + test_function_string)
+            #print('BC x(0) = ' + str(x0))
+            #print('BC y(0) = ' + str(y0))
+
+            f_in = eval(test_function_string)
             f_prime = sp.diff(f_in, x)
             y_prime = sp.lambdify(x, f_prime)
             f_2prime = sp.diff(f_prime, x)
             y_2prime = sp.lambdify(x, f_2prime)
             f_3prime = sp.diff(f_2prime, x)
             y_3prime = sp.lambdify(x, f_3prime)
-
             t_series = y0 + y_prime(x0) * (x-x0) + (y_2prime(x0) / sp.factorial(2)) * (x-x0)**2 + (y_3prime(x0) / sp.factorial(3)) * (x-x0)**3
+        
+        self.numerical_approximation["approx_function"] = sp.lambdify(x, t_series)
+        
 
-        self.solution["numerical_approx_function"] = sp.lambdify(x, t_series)
+    def eval_function(self, min_range, max_range, increment):
+        # min_range is integer or float
+        # max_range is integer or float
+        # increment is integer
 
-    def mutiple_steps(self, test_function, x0, y0, min_range, max_range, increment):
-        self.solution["min_range"] = min_range
-        self.solution["max_range"] = max_range
-        self.solution["increment"] = increment
-        self.solution["numerical_x_values"] = np.linspace(min_range, max_range, num=increment) # assuming that x0 is at min range
+        self.numerical_approximation["min_range"] = min_range
+        self.numerical_approximation["max_range"] = max_range
+        self.numerical_approximation["increment"] = increment
+        self.numerical_approximation["x_range"] = np.linspace(min_range, max_range, num=increment) # assuming that x0 is at min range
+        x_range = self.numerical_approximation["x_range"]
+        test_function_string = self.numerical_approximation["test_function_string"]
 
-        iter_y0 = y0
-        iter_y0_array = np.array([y0]) # assuming that x0 and y0 are the starting point
-        for i in range(len(self.solution["numerical_x_values"]) - 1):
-            iter_x0 = self.solution["numerical_x_values"][i]
-            iter_y0 = iter_y0_array[i]
-            iter_x_eval = self.solution["numerical_x_values"][i + 1]
-            self.series_approximation(test_function, iter_x0, iter_y0)
-            iter_y0_array = np.append(iter_y0_array, self.solution["numerical_approx_function"](iter_x_eval))
+        if self.numerical_approximation["step_type"] == "multiple":
+            
+            self.numerical_approximation["y_range"] = np.append(self.numerical_approximation["y_range"], self.numerical_approximation["y0"])
+            for i in range(len(x_range) - 1):
+                x0 = x_range[i]
+                y0 = self.numerical_approximation["y_range"][i]
+                x_eval = x_range[i + 1]
+                self.series_approximation(test_function_string, x0, y0)
+                self.numerical_approximation["y_range"] = np.append(self.numerical_approximation["y_range"], self.numerical_approximation["approx_function"](x_eval))
 
-        exact_solution_list = np.array([])
-        for i in self.solution["numerical_x_values"]:
-            if self.exact["function_string"] is not None:
-                exact_solution_list = np.append(exact_solution_list, self.eval_exact_x(i))
+            if self.exact_solution["solution_string"] is not None:
+                for i in x_range:
+                    self.exact_solution["y_range"] = np.append(self.exact_solution["y_range"], self.exact_solution["function"](i))
 
-        plt.plot(self.solution["numerical_x_values"], iter_y0_array, color='orange', label='Taylor')
-        plt.plot(self.solution["numerical_x_values"], exact_solution_list, color='blue', label='Exact', linestyle='dashed')
-        plt.title('Taylor approx multiple steps vs exact solution')
+            plt.plot(x_range, self.numerical_approximation["y_range"], color='orange', label='Taylor')
+            if self.exact_solution["solution_string"] is not None:
+                plt.plot(x_range, self.exact_solution["y_range"], color='blue', label='Exact', linestyle='dashed')
+            plt.title('Taylor approx multiple steps vs exact solution')
+            plt.legend()
+            plt.show()
+
+        elif self.numerical_approximation["step_type"] == "single":
+            self.series_approximation(test_function_string, self.numerical_approximation["x0"], self.numerical_approximation["y0"])
+
+            for i in x_range:
+                self.numerical_approximation["y_range"] = np.append(self.numerical_approximation["y_range"], self.numerical_approximation["approx_function"](i))
+                if self.exact_solution["solution_string"] is not None:
+                    self.exact_solution["y_range"] = np.append(self.exact_solution["y_range"], self.exact_solution["function"](i))
+
+            plt.plot(x_range, self.numerical_approximation["y_range"], color='orange', label='Taylor')
+            if self.exact_solution["solution_string"] is not None:
+                plt.plot(x_range, self.exact_solution["y_range"], color='blue', label='Exact')
+            plt.legend()
+            plt.title('Taylor approx vs exact solution')
+            plt.show()
+
+
+    def plot_error(self):
+        if self.numerical_approximation["step_type"] == "single":
+            self.numerical_approximation["numerical_error"] = np.array([])
+            for i in self.numerical_approximation["x_range"]:
+                self.numerical_approximation["numerical_error"] = np.append(self.numerical_approximation["numerical_error"], self.exact_solution["function"](i) - self.numerical_approximation["approx_function"](i))
+
+        elif self.numerical_approximation["step_type"] == "multiple":    
+            self.numerical_approximation["numerical_error"] = self.exact_solution["y_range"] - self.numerical_approximation["y_range"]
+
+        plt.plot(self.numerical_approximation["x_range"], self.numerical_approximation["numerical_error"], color='red', label='error')
         plt.legend()
+        plt.title('Numerical error of taylor approximation')
         plt.show()
 
-        self.solution["numerical_error"] = exact_solution_list - iter_y0_array
-
-        plt.plot(self.solution["numerical_x_values"], self.solution["numerical_error"], color='red', label='error')
-        plt.legend()
-        plt.title('Numerical error of multiple steps Taylor approximation')
-        plt.show()
+    
+    def eval_value(self, value):
+        return np.interp(value, self.numerical_approximation["x_range"], self.numerical_approximation["y_range"])
