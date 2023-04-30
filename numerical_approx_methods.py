@@ -16,11 +16,12 @@ def main():
     # can be obtained straightforwardly: y(x) = 3/(1-x^3)
     # Therefore the exact solution at x = 0.3 => y(0.3) = 3 / 0.97300 ~ 3.08325
     
-    approx_func = taylorSeries()
-    approx_func.load_function('sp.exp(-x**2)')
-    approx_func.set_parameters(0, 0, 'multiple', True)
-    approx_func.eval_function(0, 10, 50)
-    print(approx_func.eval_value(10))
+    FO_L_DE = taylorSeries()
+    FO_L_DE.load_function('-2 * x**3 - 2 * y * x','1 - x**2 + 1 * sp.exp(-x * x)')
+    FO_L_DE.set_parameters(0, 2, 'single', True)
+    FO_L_DE.eval_function(-2, 2, 50)
+    FO_L_DE.plot_error()
+
     
     if 1 == 0:
         num_approx = taylorSeries()
@@ -47,6 +48,12 @@ def main():
         num_approx_multiple_cos.set_parameters(0, 1,'multiple', False)
         num_approx_multiple_cos.eval_function(0, 2 * 3.1416, 50)
         num_approx_multiple_cos.plot_error()
+
+        approx_func = taylorSeries()
+        approx_func.load_function('sp.exp(-x**2)')
+        approx_func.set_parameters(0, 0, 'multiple', True)
+        approx_func.eval_function(0, 10, 50)
+        print(approx_func.eval_value(10))
 
 
 if __name__ == "__main__":
