@@ -1,6 +1,7 @@
 # numerical approximation main file
 # test dev branch
 from taylorSeries import taylorSeries
+from rungeKutta import rungeKutta
 
 def main():
     # x_data = np.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2 ])
@@ -16,12 +17,10 @@ def main():
     # can be obtained straightforwardly: y(x) = 3/(1-x^3)
     # Therefore the exact solution at x = 0.3 => y(0.3) = 3 / 0.97300 ~ 3.08325
     
-    FO_L_DE = taylorSeries()
-    FO_L_DE.load_function('-2 * x**3 - 2 * y * x','1 - x**2 + 1 * sp.exp(-x * x)')
-    FO_L_DE.set_parameters(0, 2, 'single', True)
-    FO_L_DE.eval_function(-2, 2, 50)
-    FO_L_DE.plot_error()
-
+    rk_approx = rungeKutta()
+    rk_approx.load_function('x**2 * y**2')
+    rk_approx.set_parameters(0, 3, 'single')
+    rk_approx.eval_function(0, 0.99, 25)
     
     if 1 == 0:
         num_approx = taylorSeries()
@@ -54,6 +53,12 @@ def main():
         approx_func.set_parameters(0, 0, 'multiple', True)
         approx_func.eval_function(0, 10, 50)
         print(approx_func.eval_value(10))
+
+        FO_L_DE = taylorSeries()
+        FO_L_DE.load_function('-2 * x**3 - 2 * y * x','1 - x**2 + 1 * sp.exp(-x * x)')
+        FO_L_DE.set_parameters(0, 2, 'single', True)
+        FO_L_DE.eval_function(-2, 2, 50)
+        FO_L_DE.plot_error()
 
 
 if __name__ == "__main__":

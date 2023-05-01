@@ -13,7 +13,7 @@ class taylorSeries(object):
 
         self.numerical_approximation = {
             "x0": None, # boundary condition
-            "x_range":np.array([]),
+            "x_range": None,
             "y0": None, # boundary condition
             "y_range": np.array([]),
             "min_range": None,
