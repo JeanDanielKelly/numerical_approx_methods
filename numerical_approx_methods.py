@@ -18,9 +18,11 @@ def main():
     # Therefore the exact solution at x = 0.3 => y(0.3) = 3 / 0.97300 ~ 3.08325
     
     rk_approx = rungeKutta()
-    rk_approx.load_function('x**2 * y**2')
+    rk_approx.load_function('x**2 * y**2','-3/(-1+x**3)')
     rk_approx.set_parameters(0, 3, 'single')
-    rk_approx.eval_function(0, 0.99, 25)
+    rk_approx.eval_function(0, 0.99, 50)
+    rk_approx.plot_error()
+    print(rk_approx.eval_value(0.3))
     
     if 1 == 0:
         num_approx = taylorSeries()

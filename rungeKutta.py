@@ -20,6 +20,7 @@ class rungeKutta(object):
             "test_function_string": None,
             "test_function": None,
             "approx_function": None,
+            "step_type": None,
             "numerical_error": None
         }
 
@@ -62,16 +63,16 @@ class rungeKutta(object):
 
         for xn in x_range:
             h = xn - x0
-            R1 = test_function(x0, y0) * xn
-            R2_x = x0 + 0.5 * xn
+            R1 = test_function(x0, y0) * h
+            R2_x = x0 + 0.5 * h
             R2_y = y0 + 0.5 * R1
-            R2 = test_function(R2_x, R2_y) * xn
-            R3_x = x0 + 0.5 * xn
-            R3_y = x0 + 0.5 * R2
-            R3 = test_function(R3_x, R3_y) * xn
-            R4_x = x0 + xn
+            R2 = test_function(R2_x, R2_y) * h
+            R3_x = x0 + 0.5 * h
+            R3_y = y0 + 0.5 * R2
+            R3 = test_function(R3_x, R3_y) * h
+            R4_x = x0 + h
             R4_y = y0 + R3
-            R4 = test_function(R4_x, R4_y) * xn
+            R4 = test_function(R4_x, R4_y) * h
             result = y0 + 1/6 * (R1 + 2 * R2 + 2 * R3 + R4)
             self.parameters["R1"] = np.append(self.parameters["R1"], R1)
             self.parameters["R2"] = np.append(self.parameters["R2"], R2)
@@ -81,7 +82,7 @@ class rungeKutta(object):
             self.numerical_approximation["y_range"] = np.append(self.numerical_approximation["y_range"], result)
             
             if self.exact_solution["solution_string"] is not None:
-                self.exact_solution["y_range"] = np.append(self.exact_solution["y_range"], self.exact_solution["solution"](xn))
+                self.exact_solution["y_range"] = np.append(self.exact_solution["y_range"], self.exact_solution["function"](xn))
 
         plt.plot(x_range, self.numerical_approximation["y_range"], color='orange', label='Runge-Kutta')
         if self.exact_solution["solution_string"] is not None:
@@ -89,3 +90,15 @@ class rungeKutta(object):
         plt.legend()
         plt.title('Runge-Kutta approx vs exact solution')
         plt.show()
+
+    def plot_error(self):
+        self.numerical_approximation["numerical_error"] = self.exact_solution["y_range"] - self.numerical_approximation["y_range"]
+
+        plt.plot(self.numerical_approximation["x_range"], self.numerical_approximation["numerical_error"], color='red', label='error')
+        plt.legend()
+        plt.title('Numerical error of Runge Kutta approximation')
+        plt.show()
+    
+        
+    def eval_value(self, value):
+        return np.interp(value, self.numerical_approximation["x_range"], self.numerical_approximation["y_range"])
