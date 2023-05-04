@@ -19,7 +19,7 @@ def main():
     
     rk_approx = rungeKutta()
     rk_approx.load_function('x**2 * y**2','-3/(-1+x**3)')
-    rk_approx.set_parameters(0, 3, 'single')
+    rk_approx.set_parameters(0, 3, 'multiple')
     rk_approx.eval_function(0, 0.99, 50)
     rk_approx.plot_error()
     print(rk_approx.eval_value(0.3))
